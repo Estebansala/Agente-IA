@@ -1,25 +1,18 @@
 {
-  "name": "agente-ia",
+  "name": "proyecto-agente",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "type": "module",
+  "main": "agent.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Estebansala/Agente-IA.git"
+    "start": "node agent.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Douglas",
   "license": "ISC",
-  "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/Estebansala/Agente-IA/issues"
-  },
-  "homepage": "https://github.com/Estebansala/Agente-IA#readme",
+  "description": "Agente IA de planificación académica",
   "dependencies": {
     "dotenv": "^17.4.2",
-    "groq-sdk": "^1.2.0"
+    "groq-sdk": "^1.2.0",
+    "xlsx": "^0.18.5"
   }
 }
