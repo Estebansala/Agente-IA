@@ -1,38 +1,200 @@
-// Persona 5: respuestas simuladas para probar sin depender del Módulo 3
+// ======================================================
+// tools-mock.js
+// ======================================================
 
-export function detectar_conflictos({ periodo }) {
+// ======================================================
+// FASE 1
+// ======================================================
+
+export async function obtener_resumen_estado(args) {
+
   return {
-    periodo,
-    conflictos: [
-      { tipo: 'aula_ocupada', aula: 'B201', dia: 'Lunes', franja: '8-10', grupos: [1, 3] },
-      { tipo: 'docente_doble', docente: 'Felipe Vasco', dia: 'Martes', franja: '10-12', grupos: [2, 4] }
-    ],
-    total: 2
+    programa: args.programa_id,
+    total_grupos: 20,
+    sin_horario: 5,
+    en_revision: 3,
+    aprobados: 12,
+    completitud: 60
   };
+
 }
 
-export function verificar_disponibilidad({ docente_id, dia, franja }) {
-  const disponible = !(docente_id === 1 && dia === 'Martes' && franja === '14-16');
-  return {
-    docente_id, dia, franja,
-    disponible,
-    motivo: disponible ? null : 'El docente ya tiene clase asignada'
-  };
+// ======================================================
+// FASE 2
+// ======================================================
+
+export async function listar_grupos_sin_horario(args) {
+
+  return [
+    {
+      grupo_id: 'G1',
+      semestre: 1
+    },
+    {
+      grupo_id: 'G2',
+      semestre: 2
+    }
+  ];
+
 }
 
-export function asignar_clase({ grupo_id, docente_id, aula_id, dia, franja }) {
-  return {
-    exito: true,
-    mensaje: `Clase asignada: Grupo ${grupo_id} con Docente ${docente_id} en Aula ${aula_id} — ${dia} ${franja}`
-  };
+export async function listar_asignaturas_por_semestre(args) {
+
+  return [
+    'Matemáticas',
+    'Programación',
+    'Bases de Datos'
+  ];
+
 }
 
-export function listar_grupos_sin_horario() {
+export async function evaluar_fusion_grupos(args) {
+
   return {
-    grupos: [
-      { id: 3, materia: 'Bases de Datos', semestre: 3, inscritos: 18 },
-      { id: 5, materia: 'Programación 4', semestre: 5, inscritos: 15 }
-    ],
-    total: 2
+    recomendacion_fusion: true,
+    aula_sugerida: 'A101'
   };
+
+}
+
+// ======================================================
+// FASE 3
+// ======================================================
+
+export async function proponer_horario(args) {
+
+  return {
+    grupo_id: args.grupo_id,
+    bloque: 'D1',
+    dia: 'Lunes'
+  };
+
+}
+
+export async function obtener_docentes_disponibles(args) {
+
+  return [
+    {
+      docente_id: 'DOC1',
+      nombre: 'Carlos Pérez'
+    },
+    {
+      docente_id: 'DOC2',
+      nombre: 'Ana Gómez'
+    }
+  ];
+
+}
+
+export async function obtener_carga_docente(args) {
+
+  return {
+    docente_id: args.docente_id,
+    horas_actuales: 18,
+    limite: 40
+  };
+
+}
+
+export async function obtener_aulas_disponibles(args) {
+
+  return [
+    {
+      aula_id: 'A101',
+      capacidad: 40
+    }
+  ];
+
+}
+
+export async function detectar_conflictos_bloque(args) {
+
+  return {
+    conflicto: false
+  };
+
+}
+
+export async function asignar_clase(args) {
+
+  return {
+    estado: 'propuesto',
+    ...args
+  };
+
+}
+
+// ======================================================
+// FASE 4
+// ======================================================
+
+export async function solicitar_aprobacion(args) {
+
+  return {
+    aprobado: true,
+    director_id: args.director_id
+  };
+
+}
+
+// ======================================================
+// FASE 5
+// ======================================================
+
+export async function registrar_rechazo_docente(args) {
+
+  return {
+    registrado: true,
+    motivo: args.motivo
+  };
+
+}
+
+export async function procesar_contrapropuesta_docente(args) {
+
+  return {
+    viable: true,
+    nuevo_bloque: args.nuevo_bloque_id
+  };
+
+}
+
+export async function verificar_disponibilidad_docente(args) {
+
+  return {
+    docente_id: args.docente_id,
+    disponible: true,
+    bloque: args.nuevo_bloque_id
+  };
+
+}
+
+// ======================================================
+// ESTUDIANTE
+// ======================================================
+
+export async function enviar_formato_prematricula(args) {
+
+  return {
+    enviada: true,
+    estudiante_id: args.estudiante_id
+  };
+
+}
+
+export async function aprobar_prematricula(args) {
+
+  return {
+    aprobada: true
+  };
+
+}
+
+export async function rechazar_prematricula(args) {
+
+  return {
+    rechazada: true,
+    motivo: args.motivo
+  };
+
 }
