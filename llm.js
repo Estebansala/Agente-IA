@@ -1,30 +1,74 @@
-// Persona 3: conexión con Groq API
+// ======================================================
+// llm.js
+// ======================================================
+
+import dotenv from 'dotenv';
+dotenv.config();
 
 import Groq from 'groq-sdk';
-import 'dotenv/config';
+
 import { TOOLS } from './prompts.js';
 
-const groq = new Groq({ apiKey: process.env.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 });
+// ======================================================
+// CLIENTE GROQ
+// ======================================================
 
-export async function llamarLLM(messages) {
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY
+});
+
+// ======================================================
+// FUNCIÓN PRINCIPAL
+// ======================================================
+
+export async function callLLM(messages) {
+
+  console.log('\n====================================');
+  console.log('📨 Mensajes enviados al LLM');
+  console.log('====================================\n');
+
+  console.log(messages);
+
   try {
-    const response = await groq.chat.completions.create({
+
+    // ======================================================
+    // LLAMADA AL MODELO
+    // ======================================================
+
+    const completion = await groq.chat.completions.create({
+
       model: 'llama-3.3-70b-versatile',
+
       messages,
+
+      temperature: 0,
+
       tools: TOOLS,
-      tool_choice: 'auto',
-      max_tokens: 1000
+
+      tool_choice: 'auto'
+
     });
 
-    return response.choices[0].message;
+    // ======================================================
+    // RESPUESTA DEL MODELO
+    // ======================================================
+
+    const message = completion.choices[0].message;
+
+    return message;
 
   } catch (error) {
-    if (error.status === 401) throw new Error('❌ API Key inválida. Verifica el .env');
-    if (error.status === 429) {
-      console.log('⏳ Rate limit, esperando 3s...');
-      await new Promise(r => setTimeout(r, 3000));
-      return llamarLLM(messages);
-    }
-    throw error;
+
+    console.log('\n====================================');
+    console.log('❌ ERROR EN LLM');
+    console.log('====================================\n');
+
+    console.error(error);
+
+    return {
+      content: 'Ocurrió un error consultando el modelo.'
+    };
+
   }
+
 }
