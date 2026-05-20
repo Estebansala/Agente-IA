@@ -4,7 +4,7 @@ import Groq from 'groq-sdk';
 import 'dotenv/config';
 import { TOOLS } from './prompts.js';
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const groq = new Groq({ apiKey: process.env.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 });
 
 export async function llamarLLM(messages) {
   try {
