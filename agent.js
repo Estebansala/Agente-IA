@@ -1,89 +1,170 @@
-// agent.js
+// ======================================================
+// agent.js — Loop principal del agente IA
+// ======================================================
 
-import { groq } from "./llm.js";
+import dotenv from 'dotenv';
+dotenv.config();
 
-import { SYSTEM_PROMPT, TOOLS } from "./prompts.js";
+import readline from 'readline';
 
-import { toolImplementations } from "./tools.js";
+import { callLLM } from './llm.js';
+import * as tools from './tools-mock.js';
+import { SYSTEM_PROMPT } from './prompts.js';
 
-export async function ejecutarAgente(userInput) {
+const MAX_ITERACIONES = 10;
+
+// ======================================================
+// FUNCIÓN PRINCIPAL
+// ======================================================
+
+async function runAgent(question) {
 
   const messages = [
-
     {
-      role: "system",
-      content: SYSTEM_PROMPT,
+      role: 'system',
+      content: SYSTEM_PROMPT
     },
-
     {
-      role: "user",
-      content: userInput,
-    },
-
+      role: 'user',
+      content: question
+    }
   ];
 
-  while (true) {
+  // ======================================================
+  // LOOP REACT
+  // ======================================================
 
-    const response = await groq.chat.completions.create({
+  for (let i = 0; i < MAX_ITERACIONES; i++) {
 
-      model: "llama-3.3-70b-versatile",
+    console.log('\n==============================');
+    console.log(`ITERACIÓN ${i + 1}`);
+    console.log('==============================');
 
-      temperature: 0.2,
+    // ======================================================
+    // LLAMAR LLM
+    // ======================================================
 
-      messages,
+    const response = await callLLM(messages);
 
-      tools: TOOLS,
+    console.log('\nRespuesta LLM:\n');
+    console.log(response);
 
-      tool_choice: "auto",
+    messages.push(response);
 
-    });
+    // ======================================================
+    // SI HAY TOOL CALLS
+    // ======================================================
 
-    const message = response.choices[0].message;
+    if (response.tool_calls) {
 
-    // RESPUESTA NORMAL
-    if (!message.tool_calls) {
+      for (const toolCall of response.tool_calls) {
 
-      return message.content;
-    }
+        const toolName = toolCall.function.name;
 
-    // GUARDAR TOOL CALL
-    messages.push(message);
+        const args = JSON.parse(toolCall.function.arguments);
 
-    // EJECUTAR TOOLS
-    for (const toolCall of message.tool_calls) {
+        console.log('\n🔧 Tool llamada:', toolName);
+        console.log('📥 Argumentos:', args);
 
-      const functionName = toolCall.function.name;
+        // ======================================================
+        // VALIDAR TOOL
+        // ======================================================
 
-      const args = JSON.parse(
-        toolCall.function.arguments
-      );
+        if (!tools[toolName]) {
 
-      console.log("Tool ejecutada:", functionName);
+          console.log(`❌ La tool "${toolName}" no existe.`);
 
-      // BUSCAR IMPLEMENTACIÓN
-      const toolFunction =
-        toolImplementations[functionName];
+          messages.push({
+            role: 'tool',
+            tool_call_id: toolCall.id,
+            content: JSON.stringify({
+              error: `La tool "${toolName}" no existe`
+            })
+          });
 
-      if (!toolFunction) {
+          continue;
+        }
 
-        throw new Error(
-          `Tool no implementada: ${functionName}`
-        );
+        // ======================================================
+        // EJECUTAR TOOL
+        // ======================================================
+
+        try {
+
+          const result = await tools[toolName](args);
+
+          console.log('\n📤 Resultado tool:\n');
+          console.log(result);
+
+          messages.push({
+            role: 'tool',
+            tool_call_id: toolCall.id,
+            content: JSON.stringify(result)
+          });
+
+        } catch (error) {
+
+          console.log('\n❌ Error ejecutando tool:\n');
+          console.error(error);
+
+          messages.push({
+            role: 'tool',
+            tool_call_id: toolCall.id,
+            content: JSON.stringify({
+              error: error.message
+            })
+          });
+
+        }
+
       }
 
-      // EJECUTAR TOOL
-      const result = await toolFunction(args);
+    } else {
 
-      // RESPUESTA TOOL
-      messages.push({
+      // ======================================================
+      // RESPUESTA FINAL
+      // ======================================================
 
-        role: "tool",
+      return response.content;
 
-        tool_call_id: toolCall.id,
-
-        content: JSON.stringify(result),
-
-      });
     }
+
   }
+
+  return 'El agente no pudo completar la tarea.';
 }
+
+// ======================================================
+// LEER PREGUNTA DESDE CONSOLA
+// ======================================================
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
+rl.question('\n🤖 Haz una pregunta al agente:\n\n', async (pregunta) => {
+
+  try {
+
+    const respuesta = await runAgent(pregunta);
+
+    console.log('\n====================================');
+    console.log('✅ RESPUESTA FINAL DEL AGENTE');
+    console.log('====================================\n');
+
+    console.log(respuesta);
+
+  } catch (error) {
+
+    console.log('\n====================================');
+    console.log('❌ ERROR GENERAL');
+    console.log('====================================\n');
+
+    console.error(error);
+
+  }
+
+  rl.close();
+
+});
